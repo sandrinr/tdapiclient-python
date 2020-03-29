@@ -2,5 +2,5 @@
 
 __pycache__/
 /.venv
-/.poetry.lock
+/poetry.lock
 /.mypy_cache
