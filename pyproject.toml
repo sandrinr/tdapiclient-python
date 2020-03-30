@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "A Python client for the TD Ameritrade API"
 authors = ["Raffaele Sandrini <raffaele@sandrini.ch>"]
 license = "MIT"
+packages = [
+    { include = "tdapiclient" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
