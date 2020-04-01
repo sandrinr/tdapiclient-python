@@ -1,7 +1,9 @@
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Mapping, Tuple
+from decimal import Decimal
+from itertools import chain
+from typing import Any, Dict, Mapping, Tuple
 
 import requests
 from requests import Response
@@ -80,3 +82,29 @@ Status: {res.status_code} {res.reason}
 
         res.raise_for_status()
         return (res.json() if res.text else None), res.headers
+
+    @staticmethod
+    def params_from_locals(locals_: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Transforms a dict into a query parameter dict. Switching from snake case
+        to lower camel case. Suited to be applied to locals().
+        """
+        def snake2camel(in_: str) -> str:
+            first, *others = in_.split("_")
+            return "".join(chain([first.lower()], map(str.title, others)))
+
+        params: Dict[str, Any] = {}
+        for k, v in locals_.items():
+            if k == "self":
+                continue
+            if v is None:
+                continue
+            key = snake2camel(k)
+            if isinstance(v, Decimal):
+                params[key] = str(v)
+            elif isinstance(v, (datetime.date, datetime.datetime)):
+                params[key] = v.isoformat()
+            else:
+                params[key] = v
+
+        return params
