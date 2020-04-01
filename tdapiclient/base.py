@@ -1,7 +1,7 @@
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Tuple
 
 import requests
 from requests import Response
@@ -14,42 +14,22 @@ class TDAPIClientException(Exception):
 
 
 @dataclass
-class TDContext:
+class TDAuthContext:
     client_id: str
     refresh_token: str
-    access_token: Optional[str] = None
-    access_token_valid_until: Optional[datetime.datetime] = None
+    access_token: str
+    access_token_valid_until: datetime.datetime
 
 
 class TDBase:
     url_base = "https://api.tdameritrade.com/v1"
-    context: TDContext
+    auth_context: TDAuthContext
 
-    def __init__(self, context: TDContext):
-        self.context = context
-
-    def _access_token(self) -> str:
-        if self.context.access_token is None:
-            LOGGER.debug("_access_token: access token is None, requesting new one")
-            from .auth import get_access_token
-
-            token = get_access_token(
-                client_id=self.context.client_id,
-                refresh_token=self.context.refresh_token,
-            )
-            self.context.access_token = token["access_token"]
-            self.context.access_token_valid_until = datetime.datetime.now(
-                tz=datetime.timezone.utc
-            ) + datetime.timedelta(seconds=int(token["expires_in"]))
-            LOGGER.debug(
-                "_access_token: got new access token, access_token=%s..., valid_until=%s",
-                self.context.access_token[:12],
-                self.context.access_token_valid_until,
-            )
-        return self.context.access_token
+    def __init__(self, auth_context: TDAuthContext):
+        self.auth_context = auth_context
 
     def _auth_headers(self):
-        return {"Authorization": f"Bearer {self._access_token()}"}
+        return {"Authorization": f"Bearer {self.auth_context.access_token}"}
 
     def _get(self, path: str, **request_args) -> Tuple[Any, Mapping[str, str]]:
         return self._call(method="GET", path=path, **request_args)

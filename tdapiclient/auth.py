@@ -17,13 +17,36 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import NameOID
 
-from .base import TDAPIClientException
+from .base import TDAPIClientException, TDAuthContext
 
 LOGGER = logging.getLogger(__name__)
 
 
 class TDAPIClientAuthenticationException(TDAPIClientException):
     pass
+
+
+def authenticate(client_id: str, refresh_token: str) -> TDAuthContext:
+    LOGGER.debug("authenticate: requesting a new access token")
+
+    auth_ret = get_access_token(client_id=client_id, refresh_token=refresh_token)
+    access_token = auth_ret["access_token"]
+    valid_until = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
+        seconds=int(auth_ret["expires_in"])
+    )
+
+    LOGGER.debug(
+        "authenticate: got new access token, access_token=%s..., valid_until=%s",
+        access_token[:12],
+        valid_until,
+    )
+
+    return TDAuthContext(
+        client_id=client_id,
+        refresh_token=refresh_token,
+        access_token=access_token,
+        access_token_valid_until=valid_until,
+    )
 
 
 def get_access_token(client_id, refresh_token) -> dict:
