@@ -36,11 +36,25 @@ class TDBase:
     def _get(self, path: str, **request_args) -> Tuple[Any, Mapping[str, str]]:
         return self._call(method="GET", path=path, **request_args)
 
-    def _post(self, path: str, **request_args) -> Tuple[Any, Mapping[str, str]]:
-        return self._call(method="POST", path=path, **request_args)
+    def _post(
+        self, path: str, expect_response_body: bool = True, **request_args
+    ) -> Tuple[Any, Mapping[str, str]]:
+        return self._call(
+            method="POST",
+            path=path,
+            expect_response_body=expect_response_body,
+            **request_args,
+        )
 
-    def _delete(self, path: str, **request_args) -> Tuple[Any, Mapping[str, str]]:
-        return self._call(method="DELETE", path=path, **request_args)
+    def _delete(
+        self, path: str, expect_response_body: bool = True, **request_args
+    ) -> Tuple[Any, Mapping[str, str]]:
+        return self._call(
+            method="DELETE",
+            path=path,
+            expect_response_body=expect_response_body,
+            **request_args,
+        )
 
     @staticmethod
     def _trace_response(res: Response):
@@ -68,7 +82,7 @@ Status: {res.status_code} {res.reason}
 """
 
     def _call(
-        self, method: str, path: str, **request_args
+        self, method: str, path: str, expect_response_body: bool = True, **request_args
     ) -> Tuple[Any, Mapping[str, str]]:
         url = self.url_base + path
         LOGGER.debug("_call: %s %s", method, url)
@@ -81,7 +95,13 @@ Status: {res.status_code} {res.reason}
             )
 
         res.raise_for_status()
-        return (res.json() if res.text else None), res.headers
+
+        if expect_response_body:
+            data = res.json(parse_float=Decimal)
+        else:
+            data = None
+
+        return data, res.headers
 
     @staticmethod
     def params_from_locals(locals_: Dict[str, Any]) -> Dict[str, Any]:
@@ -89,6 +109,7 @@ Status: {res.status_code} {res.reason}
         Transforms a dict into a query parameter dict. Switching from snake case
         to lower camel case. Suited to be applied to locals().
         """
+
         def snake2camel(in_: str) -> str:
             first, *others = in_.split("_")
             return "".join(chain([first.lower()], map(str.title, others)))

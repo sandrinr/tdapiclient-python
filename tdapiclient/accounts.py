@@ -36,7 +36,11 @@ class TDAccounts(TDBase):
 
     def place_order(self, account_id: str, order: dict) -> str:
         """Place order and return oder ID (if successful)."""
-        _, headers = self._post(path=f"/accounts/{q(account_id)}/orders", json=order)
+        _, headers = self._post(
+            path=f"/accounts/{q(account_id)}/orders",
+            json=order,
+            expect_response_body=False,
+        )
         # The order ID can be found in the Location header
         return headers["Location"].split("/")[-1]
 
