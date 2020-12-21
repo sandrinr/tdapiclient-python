@@ -46,6 +46,16 @@ class TDBase:
             **request_args,
         )
 
+    def _put(
+        self, path: str, expect_response_body: bool = True, **request_args
+    ) -> Tuple[Any, Mapping[str, str]]:
+        return self._call(
+            method="PUT",
+            path=path,
+            expect_response_body=expect_response_body,
+            **request_args,
+        )
+
     def _delete(
         self, path: str, expect_response_body: bool = True, **request_args
     ) -> Tuple[Any, Mapping[str, str]]:

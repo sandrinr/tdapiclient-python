@@ -35,9 +35,19 @@ class TDAccounts(TDBase):
         return res
 
     def place_order(self, account_id: str, order: dict) -> str:
-        """Place order and return oder ID (if successful)."""
+        """Place order and return order ID (if successful)."""
         _, headers = self._post(
             path=f"/accounts/{q(account_id)}/orders",
+            json=order,
+            expect_response_body=False,
+        )
+        # The order ID can be found in the Location header
+        return headers["Location"].split("/")[-1]
+
+    def replace_order(self, account_id: str, order_id: str, order: dict) -> str:
+        """Replace an order and return order ID (if successful)."""
+        _, headers = self._put(
+            path=f"/accounts/{q(account_id)}/orders/{q(order_id)}",
             json=order,
             expect_response_body=False,
         )
