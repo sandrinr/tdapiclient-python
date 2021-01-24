@@ -85,3 +85,7 @@ class TDAccounts(TDBase):
             path=f"/accounts/{q(account_id)}/transactions", params=params
         )
         return res
+
+    def get_watchlists(self, account_id: str):
+        res, _ = self._get(path=f"/accounts/{q(account_id)}/watchlists")
+        return res
